@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"
 
-const appSettings = {
+const firebaseConfig = {
     apiKey: "AIzaSyD_IvSRDrRFsPknux2miQblJlqGi-l6-NA",
     authDomain: "gottagrab-a41cb.firebaseapp.com",
     databaseURL: "https://gottagrab-a41cb-default-rtdb.firebaseio.com",
@@ -11,16 +10,6 @@ const appSettings = {
     appId: "1:480463748060:web:d78f98fc26afc085046d19"
 }
 
-firebase.initializeApp(appSettings);
+const firebaseApp = initializeApp(firebaseConfig);
 
-var uiConfig = {
-    signInSuccessUrl: 'app.html', // Redirect URL after successful sign-in
-    signInOptions: [
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        firebase.auth.EmailAuthProvider.PROVIDER_ID
-    ],
-};
-
-var ui = new firebaseui.auth.AuthUI(firebase.auth());
-ui.start('#firebaseui-auth-container', uiConfig);
-document.getElementById('loader').style.display = 'none';
+export default firebaseApp;
