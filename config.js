@@ -14,7 +14,7 @@ const appSettings = {
 firebase.initializeApp(appSettings);
 
 var uiConfig = {
-    signInSuccessUrl: 'index.html', // Redirect URL after successful sign-in
+    signInSuccessUrl: 'app.html', // Redirect URL after successful sign-in
     signInOptions: [
         firebase.auth.GoogleAuthProvider.PROVIDER_ID,
         firebase.auth.EmailAuthProvider.PROVIDER_ID
