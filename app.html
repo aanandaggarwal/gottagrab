@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>GottaGrab</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,21 +13,17 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.pngv=2">
     <link rel="manifest" href="/site.webmanifest">
     <link rel="stylesheet" href="index.css">
-
-    <script src="https://www.gstatic.com/firebasejs/8.2.6/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.2.6/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.js"></script>
-    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.css" />
-    <script src="config.js" type="module"></script>
 </head>
-
 <body>
     <div class="container">
         <img src="assets/LOGO.png">
         <h1>GottaGrab</h1>
-        <div id="firebaseui-auth-container"></div>
-        <div id="loader">Loading...</div>
+        <form>
+            <input type="text" id="input-field" placeholder="What do we need?">
+            <button id="add-button">Add to List</button>
+        </form>
+        <ul id="shopping-list"></ul>
     </div>
+    <script src="app.js" type="module"></script>
 </body>
-
 </html>
