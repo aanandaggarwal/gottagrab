@@ -168,14 +168,14 @@ export default function ListsManager({
                     <button
                       title="Manage Members"
                       onClick={() => setManageListId(l.id)}
-                      className="text-secondary hover:text-accent transition"
+                      className="text-secondary hover:text-primary transition"
                     >
                       <Share2 size={20} />
                     </button>
                     <button
                       title="Delete List"
                       onClick={() => requestDeleteList(l.id)}
-                      className="text-secondary hover:text-red-500 transition"
+                      className="text-secondary hover:text-red-700 transition"
                     >
                       <Trash2 size={20} />
                     </button>

@@ -102,7 +102,7 @@ export default function ManageMembersModal({
               />
               <button
                 onClick={invite}
-                className="px-4 py-2 bg-green-300 text-white rounded-md hover:bg-green-600 transition"
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
               >
                 <UserPlus2 />
               </button>

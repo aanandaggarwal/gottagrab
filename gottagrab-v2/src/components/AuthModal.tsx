@@ -71,7 +71,7 @@ export default function AuthModal() {
         </div>
         <button
           onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-2 py-2 border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition"
+          className="w-full flex items-center justify-center gap-2 py-2 border border-primary text-white rounded-md bg-red-700 hover:bg-accent hover:text-white transition"
         >
           <LogIn /> Continue with Google
         </button>
