@@ -1,4 +1,3 @@
-// src/components/ConfirmModal.tsx
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'

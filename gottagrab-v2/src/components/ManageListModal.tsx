@@ -1,50 +1,37 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import {
-  List as ListIcon,
-  ShoppingCart,
-  Tag,
-  Star,
-  Box,
-  Heart,
+  List as ListIconComponent,
+  ShoppingCart as ShoppingCartIcon,
+  Tag as TagIcon,
+  Star as StarIcon,
+  Box as BoxIcon,
+  Heart as HeartIcon,
 } from 'lucide-react'
-
-export type ListEdit = {
-  id: string
-  name: string
-  icon: string
-  icon_color: string
-}
+import type { List } from './ListsManager'
 
 interface Props {
-  list: ListEdit
+  list: List
   isOpen: boolean
   onClose: () => void
-  onSave: (updated: ListEdit) => void
+  onSave: (updated: List) => void
 }
 
 const COLOR_OPTIONS = [
-  '#EF4444', // red-500
-  '#F59E0B', // amber-500
-  '#10B981', // emerald-500
-  '#3B82F6', // blue-500
-  '#6366F1', // indigo-500
-  '#8B5CF6', // violet-500
-  '#EC4899', // pink-500
-  '#14B8A6', // teal-500
+  '#EF4444', '#F59E0B', '#10B981', '#3B82F6',
+  '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6',
 ]
 
 const ICON_OPTIONS: { id: string; Icon: React.FC<any> }[] = [
-  { id: 'ListIcon', Icon: ListIcon },
-  { id: 'ShoppingCart', Icon: ShoppingCart },
-  { id: 'Tag', Icon: Tag },
-  { id: 'Star', Icon: Star },
-  { id: 'Box', Icon: Box },
-  { id: 'Heart', Icon: Heart },
+  { id: 'ListIcon',         Icon: ListIconComponent },
+  { id: 'ShoppingCartIcon', Icon: ShoppingCartIcon },
+  { id: 'TagIcon',          Icon: TagIcon },
+  { id: 'StarIcon',         Icon: StarIcon },
+  { id: 'BoxIcon',          Icon: BoxIcon },
+  { id: 'HeartIcon',        Icon: HeartIcon },
 ]
 
 export default function ManageListModal({
@@ -71,23 +58,34 @@ export default function ManageListModal({
       toast('Please enter a list name', { icon: '⚠️' })
       return
     }
-    const { error } = await supabase
+
+    // 1) Update—this will now pass RLS because we created the "update own" policy
+    const { error: updateErr } = await supabase
       .from('lists')
       .update({ name: trimmed, icon, icon_color: iconColor })
       .eq('id', list.id)
 
-    if (error) {
-      toast.error(error.message, { icon: '❌' })
-    } else {
-      toast.success('List updated!', { icon: '✅' })
-      onSave({
-        id: list.id,
-        name: trimmed,
-        icon,
-        icon_color: iconColor,
-      })
-      onClose()
+    if (updateErr) {
+      toast.error(updateErr.message || 'Update failed', { icon: '❌' })
+      return
     }
+
+    // 2) Fetch exactly the one updated row
+    const { data: rows, error: fetchErr } = await supabase
+      .from('lists')
+      .select('id, name, owner_id, icon, icon_color')
+      .eq('id', list.id)
+      .limit(1)
+
+    if (fetchErr || !rows?.length) {
+      toast.error(fetchErr?.message || 'Saved but couldn’t reload', { icon: '⚠️' })
+      return
+    }
+
+    const updated = rows[0]
+    toast.success('List updated!', { icon: '✅' })
+    onSave(updated)
+    onClose()
   }
 
   return (
@@ -110,20 +108,18 @@ export default function ManageListModal({
           >
             <h3 className="text-2xl font-semibold mb-4">Edit List</h3>
 
-            {/* Name */}
             <label className="block mb-4">
               <span className="text-secondary">Name</span>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-secondary/30 rounded-md focus:ring-2 focus:ring-primary"
+                className="mt-1 w-full px-3 py-2 border border-secondary/30 rounded-md focus:ring-2 focus:ring-primary"
               />
             </label>
 
-            {/* Icon Picker */}
             <div className="mb-4">
               <span className="text-secondary block mb-1">Icon</span>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex gap-3 flex-wrap">
                 {ICON_OPTIONS.map(({ id, Icon }) => (
                   <button
                     key={id}
@@ -140,7 +136,6 @@ export default function ManageListModal({
               </div>
             </div>
 
-            {/* Color Picker */}
             <div className="mb-6">
               <span className="text-secondary block mb-1">Icon Color</span>
               <div className="grid grid-cols-4 gap-4 justify-center">
@@ -157,7 +152,6 @@ export default function ManageListModal({
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex justify-end gap-3">
               <button
                 onClick={onClose}

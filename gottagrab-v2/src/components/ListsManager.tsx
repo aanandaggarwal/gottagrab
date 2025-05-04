@@ -19,22 +19,26 @@ import ManageListModal from './ManageListModal'
 
 // List type
 export type List = {
-    id: string
-    name: string
-    owner_id: string
-    icon: string
-    icon_color: string
-  }
-  
+  id: string
+  name: string
+  owner_id: string
+  icon: string
+  icon_color: string
+}
+
+interface Props {
+  user: User
+  onSelect: (l: List) => void
+  refreshFlag: number
+  setRefreshFlag: React.Dispatch<React.SetStateAction<number>>
+}
+
 export default function ListsManager({
   user,
   onSelect,
   refreshFlag,
-}: {
-  user: User
-  onSelect: (l: List) => void
-  refreshFlag: number
-}) {
+  setRefreshFlag,
+}: Props) {
   const [lists, setLists] = useState<List[]>([])
   const [newName, setNewName] = useState('')
   const [deleteListId, setDeleteListId] = useState<string | null>(null)
@@ -42,19 +46,17 @@ export default function ListsManager({
   const [manageListId, setManageListId] = useState<string | null>(null)
   const [editingList, setEditingList] = useState<List | null>(null)
 
-  // load lists w/ icon
   useEffect(() => {
     supabase
       .from('lists')
-      .select('id,name,owner_id,icon,icon_color')
+      .select('id, name, owner_id, icon, icon_color')
       .order('created_at', { ascending: true })
       .then(({ data, error }) => {
         if (error) toast.error(error.message, { icon: '❌' })
         else setLists(data as List[])
       })
-  }, [refreshFlag])
+  }, [refreshFlag, user.id])
 
-  // create list
   const createList = async () => {
     const name = newName.trim()
     if (!name) {
@@ -62,47 +64,62 @@ export default function ListsManager({
       return
     }
     setNewName('')
+
+    const defaultIcon = 'ListIcon'
+    const defaultColor = '#6B7280'
+
     const { data, error } = await supabase
       .from('lists')
-      .insert({ name, owner_id: user.id })
-      .select('id,name,owner_id,icon')
+      .insert({
+        name,
+        owner_id: user.id,
+        icon: defaultIcon,
+        icon_color: defaultColor,
+      })
+      .select('id, name, owner_id, icon, icon_color')
       .single()
 
-    if (error) {
-      toast.error(error.message, { icon: '❌' })
-    } else {
-      setLists((prev) => [...prev, data as List])
+    if (error) toast.error(error.message, { icon: '❌' })
+    else {
+      setLists((prev) => [...prev, data])
       toast.success('List created!', { icon: '🆕' })
     }
   }
 
-  // request delete
   const requestDeleteList = (id: string) => {
     setDeleteListId(id)
     setConfirmOpen(true)
   }
+
   const confirmDeleteList = async () => {
     if (!deleteListId) return
-    const { error } = await supabase.from('lists').delete().eq('id', deleteListId)
+
+    const { error } = await supabase
+      .from('lists')
+      .delete()
+      .eq('id', deleteListId)
+
     if (error) toast.error(error.message, { icon: '❌' })
     else {
       setLists((prev) => prev.filter((l) => l.id !== deleteListId))
       toast('List deleted', { icon: '🗑️' })
     }
+
     setConfirmOpen(false)
     setDeleteListId(null)
   }
 
-  // handle edit save
-  const handleSave = (updated: Pick<List, 'id' | 'name' | 'icon'>) => {
+  // receives the freshly‐fetched row from ManageListModal
+  const handleSave = (updatedList: List) => {
+    // 1) overwrite in our local array
     setLists((prev) =>
       prev.map((l) =>
-        l.id === updated.id
-          ? { ...l, name: updated.name, icon: updated.icon }
-          : l
+        l.id === updatedList.id ? updatedList : l
       )
     )
+    // 2) close modal + open the updated list
     setEditingList(null)
+    onSelect(updatedList)
   }
 
   return (
@@ -125,37 +142,46 @@ export default function ListsManager({
               whileHover={{ scale: 1.03 }}
               className="flex items-center bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition-transform"
             >
-              <IconComp size={24} className="text-primary mr-3" />
-              <div className="flex-1">
+              <IconComp
+                size={24}
+                style={{ color: l.icon_color || '#6B7280' }}
+                className="mr-3 flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
                 <button
                   onClick={() => onSelect(l)}
-                  className="text-lg font-semibold text-secondary text-left w-full"
+                  className="text-lg font-semibold text-secondary text-left w-full hover:text-primary transition truncate"
                 >
                   {l.name}
                 </button>
               </div>
-              {l.owner_id === user.id && (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setEditingList(l)}
-                    className="text-secondary hover:text-accent transition"
-                  >
-                    <Edit2 size={20} />
-                  </button>
-                  <button
-                    onClick={() => setManageListId(l.id)}
-                    className="text-secondary hover:text-accent transition"
-                  >
-                    <Share2 size={20} />
-                  </button>
-                  <button
-                    onClick={() => requestDeleteList(l.id)}
-                    className="text-secondary hover:text-red-500 transition"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-3 ml-2 flex-shrink-0">
+                {l.owner_id === user.id && (
+                  <>
+                    <button
+                      title="Edit List"
+                      onClick={() => setEditingList(l)}
+                      className="text-secondary hover:text-accent transition"
+                    >
+                      <Edit2 size={20} />
+                    </button>
+                    <button
+                      title="Manage Members"
+                      onClick={() => setManageListId(l.id)}
+                      className="text-secondary hover:text-accent transition"
+                    >
+                      <Share2 size={20} />
+                    </button>
+                    <button
+                      title="Delete List"
+                      onClick={() => requestDeleteList(l.id)}
+                      className="text-secondary hover:text-red-500 transition"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </>
+                )}
+              </div>
             </motion.div>
           )
         })}
@@ -167,6 +193,7 @@ export default function ListsManager({
           onChange={(e) => setNewName(e.target.value)}
           placeholder="New list name"
           className="flex-grow px-4 py-3 border border-secondary/30 rounded-lg text-lg focus:ring-2 focus:ring-primary"
+          onKeyDown={(e) => e.key === 'Enter' && createList()}
         />
         <motion.button
           whileTap={{ scale: 0.9 }}
@@ -184,11 +211,13 @@ export default function ListsManager({
         onCancel={() => setConfirmOpen(false)}
       />
 
-<ManageMembersModal
-        listId={manageListId!}
-        isOpen={Boolean(manageListId)}
-        onClose={() => setManageListId(null)}
-      />
+      {manageListId && (
+        <ManageMembersModal
+          listId={manageListId}
+          isOpen={true}
+          onClose={() => setManageListId(null)}
+        />
+      )}
 
       {editingList && (
         <ManageListModal
@@ -197,6 +226,7 @@ export default function ListsManager({
           onClose={() => setEditingList(null)}
           onSave={handleSave}
         />
-      )}</div>
+      )}
+    </div>
   )
 }
