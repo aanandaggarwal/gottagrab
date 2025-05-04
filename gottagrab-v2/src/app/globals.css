@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* App background */
+body {
+  background-color: theme('colors.bg');
+}
+
+/* Toast styling */
+.Toastify__toast {
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h1, h2, h3, h4, h5, h6, text, div, span, p {
+  @apply select-none cursor-default;
+}
